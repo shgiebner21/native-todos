@@ -2,12 +2,12 @@ import React from 'react'
 import { Constants } from 'expo'
 import { Ionicons } from '@expo/vector-icons'
 import { StyleSheet, Text, View, TextInput, TouchableOpacity,
-         ListView, Keyboard } from 'react-native'
+         ListView, Keyboard, Switch } from 'react-native'
 
 const Header = (props) => {
   return (
     <View style={styles.header}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={props.onToggleAllComplete} >
         <Ionicons name='ios-checkmark-circle' size={32} color='lightblue' />
       </TouchableOpacity>
       <TextInput value={props.value}
@@ -25,11 +25,27 @@ const Footer = () => <View />
 
 const Row = ({text, complete}) => {
   return (
-    <View>
-      <Text>{text}</Text>
+    <View style={rstyles.container} >
+      <Switch value={complete} />
+      <View style={rstyles.textWrap} >
+        <Text style={[rstyles.text, complete && rstyles.complete]} >{text}</Text>
+      </View>
     </View>
   )
 }
+
+const rstyles = StyleSheet.create({
+  container: {
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between'
+  },
+  text: { fontSize: 24, color: '#4d4d4d' },
+  complete: { textDecorationLine: 'line-through' },
+  textWrap: { flex: 1, marginHorizontal: 10 }
+
+})
 
 export default class App extends React.Component {
   constructor (props) {
@@ -37,11 +53,18 @@ export default class App extends React.Component {
     const ds = new ListView.DataSource({
       rowHasChanged: (r1, r2) => r1 !== r2
     })
-    this.state = { value: '', items: [],
+    this.state = { allComplete: false, value: '', items: [],
       dataSource: ds.cloneWithRows([])
     }
     this.handleAddItem = this.handleAddItem.bind(this)
     this.setSource = this.setSource.bind(this)
+    this.handleToggleAllComplete = this.handleToggleAllComplete.bind(this)
+  }
+
+  handleToggleAllComplete () {
+    const complete = !this.state.allComplete
+    const newItems = this.state.items.map(item => ({...item, complete}) )
+    this.setSource(newItems, newItems, {allComplete: complete} )
   }
 
   setSource (items, itemsDataSource, otherState={}) {
@@ -70,6 +93,7 @@ export default class App extends React.Component {
           value={this.state.value}
           onChange={(value) => this.setState({value})}
           onAddItem={this.handleAddItem}
+          onToggleAllComplete={this.handleToggleAllComplete}
         />
           <View style={styles.content}>
             <ListView  enableEmptySections
